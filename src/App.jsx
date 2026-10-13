@@ -568,6 +568,22 @@ textarea.sa-input{ resize:vertical; line-height:1.55; }
 @keyframes scaleIn{ from{ opacity:0; transform:scale(.92); } to{ opacity:1; transform:scale(1); } }
 .anim-scale{ animation:scaleIn .3s cubic-bezier(.2,.8,.2,1) both; }
 
+/* --- Builder: sticky live-preview column (desktop md+ only) ---
+   The sticky wrapper sits inside the right column. It sticks just below the
+   builder top bar (offset measured in JS via --preview-top-offset), is capped
+   to the remaining viewport height, and scrolls internally when the A4
+   document is taller than that. Below md the two-column grid stacks and the
+   preview is shown/hidden via tabs, so sticky is disabled (position:static). */
+.builder-preview-sticky{ position:static; }
+@media(min-width:768px){
+  .builder-preview-sticky{
+    position:sticky;
+    top:var(--preview-top-offset, 56px);
+    max-height:calc(100vh - var(--preview-top-offset, 56px) - 16px);
+    overflow-y:auto;
+  }
+}
+
 /* ========== MOBILE RESPONSIVE ========== */
 @media(max-width:640px){
   /* Landing hero CV preview */
@@ -593,7 +609,7 @@ textarea.sa-input{ resize:vertical; line-height:1.55; }
   
   /* Builder top bar */
   .sa-root header select{ max-width:120px !important; font-size:12px !important; }
-  
+
   /* Filter tabs scroll horizontally */
   .sa-root .flex.flex-wrap.justify-center.gap-2{ flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; padding-bottom:8px; -webkit-overflow-scrolling:touch; }
   .sa-root .flex.flex-wrap.justify-center.gap-2::-webkit-scrollbar{ display:none; }
@@ -1427,10 +1443,23 @@ function BuilderPage({ cv, update, setTemplate, rename, onExport, onBack, accent
     update((x) => { const a = [...x.config.order]; const [m] = a.splice(from, 1); a.splice(to, 0, m); x.config.order = a; });
   };
 
+  /* Measure the sticky top bar so the live-preview panel can stick just below it */
+  const topbarRef = useRef(null);
+  const [topbarH, setTopbarH] = useState(56);
+  useEffect(() => {
+    const el = topbarRef.current;
+    if (!el) return;
+    const measure = () => setTopbarH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ "--preview-top-offset": `${topbarH + 8}px` }}>
       {/* top bar */}
-      <div className="surface border-b border-base px-3 sm:px-5 py-2.5 flex items-center gap-2 flex-wrap sticky top-0 z-20">
+      <div ref={topbarRef} className="surface border-b border-base px-3 sm:px-5 py-2.5 flex items-center gap-2 flex-wrap sticky top-0 z-20">
         <button className="btn btn-ghost btn-sm" onClick={onBack}><ChevronRight size={15} className="rotate-180" /> Dashboard</button>
         <input value={cv.name} onChange={(e) => rename(e.target.value)} className="sa-input" style={{ maxWidth: 200, fontWeight: 700 }} />
         <select className="sa-input" style={{ maxWidth: 170 }} value={cv.template} onChange={(e) => setTemplate(e.target.value)}>
@@ -1449,9 +1478,9 @@ function BuilderPage({ cv, update, setTemplate, rename, onExport, onBack, accent
         ))}
       </div>
 
-      <div className="flex-1 grid md:grid-cols-2 overflow-hidden">
+      <div className="flex-1 grid md:grid-cols-2">
         {/* editor column */}
-        <div className={cx("overflow-y-auto p-3 sm:p-5 space-y-4", tab === "preview" && "hidden md:block")} style={{ background: "var(--bg)" }}>
+        <div className={cx("min-w-0 p-3 sm:p-5 space-y-4", tab === "preview" && "hidden md:block")} style={{ background: "var(--bg)" }}>
           <div className="card p-3.5">
             <div className="flex items-center gap-2 mb-3"><span className="grid place-items-center rounded-lg" style={{ width: 28, height: 28, background: "var(--accent-soft)", color: "var(--accent)" }}><Mail size={15} /></span><span className="text-[14px] font-bold text-fg">Personal Information</span></div>
             <PersonalInfoEditor d={cv.data} update={update} showPhoto={!!(TEMPLATES.find((t) => t.id === cv.template) || {}).photo} />
@@ -1509,8 +1538,8 @@ function BuilderPage({ cv, update, setTemplate, rename, onExport, onBack, accent
         </div>
 
         {/* preview column */}
-        <div className={cx("overflow-y-auto p-4 sm:p-6 border-l border-base", tab === "edit" && "hidden md:block")} style={{ background: "var(--surface-2)" }}>
-          <div className="sticky top-0">
+        <div className={cx("min-w-0 p-4 sm:p-6 border-l border-base", tab === "edit" && "hidden md:block")} style={{ background: "var(--surface-2)" }}>
+          <div className="builder-preview-sticky">
             <div className="flex items-center justify-between mb-3">
               <span className="chip"><Eye size={13} /> Live preview</span>
               <span className="chip chip-accent">{TEMPLATES.find((t) => t.id === cv.template)?.name}</span>
