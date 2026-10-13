@@ -1,7 +1,7 @@
 # Smart ATS CV Builder — Project Handout
 
 > Complete copy-paste content + technical brief for portfolio pages, documentation, or AI-assisted site building.
-> Replace `[LIVE_DEMO_URL]` and `[GITHUB_REPO_URL]` with your real links.
+> Replace `[LIVE_DEMO_URL]` with your real link once deployed.
 
 ---
 
@@ -50,7 +50,7 @@ Short description (2–3 sentences):
 ## Links
 
 - **Live demo:** `[LIVE_DEMO_URL]`
-- **Source code:** `[GITHUB_REPO_URL]`
+- **Source code:** https://github.com/subzero7142856112-dotcom/smart-ats-cv-builder
 
 ## Project Structure
 
